@@ -1,0 +1,227 @@
+import 'dart:io';
+
+void main() {
+  Hotel hotel = Hotel();
+  bool exit = false;
+
+  while (!exit) {
+    printMenu();
+    stdout.write("Please enter your choice: ");
+    String? choice = stdin.readLineSync();
+    if (choice != null) {
+      switch (choice) {
+        case '1':
+          addRoom(hotel);
+          break;
+        case '2':
+          registerGuest(hotel);
+          break;
+        case '3':
+          bookRoom(hotel);
+          break;
+        case '4':
+          cancelBooking(hotel);
+          break;
+        case '5':
+          print('Thank you for using the hotel management system.');
+          exit = true;
+          break;
+        default:
+          print('Invalid choice, please try again.');
+      }
+    }
+  }
+}
+
+void printMenu() {
+  print('''
+    Hotel Management System
+    1. Add Room
+    2. Register Guest
+    3. Book Room
+    4. Cancel Booking
+    5. Exit
+  ''');
+}
+
+void addRoom(Hotel hotel) {
+  stdout.write('Enter room number: ');
+  String? roomNumber = stdin.readLineSync();
+  stdout.write('Enter room type (Single, Double, Suite): ');
+  String? roomType = stdin.readLineSync();
+  stdout.write('Enter price per night: ');
+  String? priceInput = stdin.readLineSync();
+  double price = priceInput != null ? double.parse(priceInput) : 0.0;
+
+  if (roomNumber != null && roomType != null) {
+    Room room = Room(roomNumber, roomType, price);
+    hotel.addRoom(room);
+    print('Invalid input. Room not added.');
+  }
+}
+
+void registerGuest(Hotel hotel) {
+  stdout.write('Enter guest name: ');
+  String? name = stdin.readLineSync();
+  stdout.write('Enter guest ID: ');
+  String? guestId = stdin.readLineSync();
+
+  if (name != null && guestId != null) {
+    Guest guest = Guest(name, guestId);
+    hotel.registerGuest(guest);
+    print('Guest registered successfully.');
+    print('Registered Guest Details:');
+    print(guest);
+  } else {
+    print('Invalid input. Guest not registered.');
+  }
+}
+
+void bookRoom(Hotel hotel) {
+  stdout.write('Enter guest ID: ');
+  String? guestId = stdin.readLineSync();
+  stdout.write('Enter room number: ');
+  String? roomNumber = stdin.readLineSync();
+
+  if (guestId != null && roomNumber != null) {
+    hotel.bookRoom(guestId, roomNumber);
+    print('Room booked successfully.');
+    print('Updated Room Details:');
+    Room? room = hotel.getRoom(roomNumber);
+    if (room != null) {
+      print(room);
+    }
+    print('Updated Guest Details:');
+    Guest? guest = hotel.getGuest(guestId);
+    if (guest != null) {
+      print(guest);
+    }
+  } else {
+    print('Invalid input. Room not booked.');
+  }
+}
+
+void cancelBooking(Hotel hotel) {
+  stdout.write('Enter guest ID: ');
+  String? guestId = stdin.readLineSync();
+  stdout.write('Enter room number: ');
+  String? roomNumber = stdin.readLineSync();
+
+  if (guestId != null && roomNumber != null) {
+    hotel.cancelRoom(guestId, roomNumber);
+    print('Booking cancelled successfully.');
+    print('Updated Room Details:');
+    Room? room = hotel.getRoom(roomNumber);
+    if (room != null) {
+      print(room);
+    }
+    print('Updated Guest Details:');
+    Guest? guest = hotel.getGuest(guestId);
+    if (guest != null) {
+      print(guest);
+    }
+  } else {
+    print('Invalid input. Booking not cancelled.');
+  }
+}
+
+class Room {
+  String roomNumber;
+  String roomType;
+  double price;
+  bool isBooked;
+
+  Room(this.roomNumber, this.roomType, this.price) : isBooked = false;
+
+  void bookRoom() {
+    isBooked = true;
+  }
+
+  void cancelBooking() {
+    isBooked = false;
+  }
+
+  @override
+  String toString() {
+    return 'Room Number: $roomNumber, Room Type: $roomType, Price: \$${price.toStringAsFixed(2)}, Is Booked: $isBooked';
+  }
+}
+
+class Guest {
+  String name;
+  String guestId;
+  List<Room> bookedRooms;
+
+  Guest(this.name, this.guestId) : bookedRooms = [];
+
+  void bookRoom(Room room) {
+    if (!room.isBooked) {
+      room.bookRoom();
+      bookedRooms.add(room);
+    }
+  }
+
+  void cancelRoom(Room room) {
+    if (room.isBooked) {
+      room.cancelBooking();
+      bookedRooms.remove(room);
+    }
+  }
+
+  @override
+  String toString() {
+    String rooms = bookedRooms.map((room) => room.roomNumber).join(', ');
+    return 'Guest Name: $name, Guest ID: $guestId, Booked Rooms: $rooms';
+  }
+}
+
+class Hotel {
+  List<Room> rooms;
+  List<Guest> guests;
+
+  Hotel() : rooms = [], guests = [];
+
+  void addRoom(Room room) {
+    rooms.add(room);
+  }
+
+  void removeRoom(Room room) {
+    rooms.remove(room);
+  }
+
+  void registerGuest(Guest guest) {
+    guests.add(guest);
+  }
+
+  void bookRoom(String guestId, String roomNumber) {
+    Guest? guest = getGuest(guestId);
+    Room? room = getRoom(roomNumber);
+    if (guest != null && room != null) {
+      guest.bookRoom(room);
+    }
+  }
+
+  void cancelRoom(String guestId, String roomNumber) {
+    Guest? guest = getGuest(guestId);
+    Room? room = getRoom(roomNumber);
+    if (guest != null && room != null) {
+      guest.cancelRoom(room);
+    }
+  }
+
+  Room? getRoom(String roomNumber) {
+    try {
+      return rooms.firstWhere((room) => room.roomNumber == roomNumber);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Guest? getGuest(String guestId) {
+    try {
+      return guests.firstWhere((guest) => guest.guestId == guestId);
+    } catch (e) {
+      return null;
+    }
+  }
+}
